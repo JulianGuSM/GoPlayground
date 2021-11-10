@@ -25,7 +25,7 @@ import (
 
 func main() {
 	logger := initLogger()
-	sugar := logger.Sugar()
+	//sugar := logger.Sugar()
 	ctx := context.Background()
 	const DbUrl = "projects/aftership-dev/instances/d-automizely-asea1/databases/cn-d-core"
 	client, err := spanner.NewClient(ctx, DbUrl)
@@ -74,7 +74,7 @@ func main() {
 			//err := CreateStringToSpanner(client, ctx, testStr)
 			err := CreateStringToSpanner(client, ctx, zipStr)
 			if err != nil {
-				sugar.Errorf("error: %v", err)
+				logger.Error("error: %v", zap.Error(err))
 				return
 			}
 			costTime := time.Now().Sub(start).Milliseconds()
