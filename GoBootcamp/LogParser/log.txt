@@ -1,0 +1,4 @@
+www.baidu.com 10
+www.qq.com 20
+golang.org 4
+www.qq.com 20
