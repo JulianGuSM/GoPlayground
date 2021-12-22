@@ -1,12 +1,5 @@
 package main
 
-/**
- * @Author: sm.gu
- * @Email: sm.gu@aftership.com
- * @Date: 2021/8/30 8:37 下午
- * @Desc:
- */
-
 func main() {
 	// ch is goroutine-safe
 	// stores up to capacity elements,(存储到容量大小)
