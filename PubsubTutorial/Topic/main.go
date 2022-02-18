@@ -1,9 +1,10 @@
 package main
 
 import (
-	"cloud.google.com/go/pubsub"
 	"context"
 	"fmt"
+
+	"cloud.google.com/go/pubsub"
 )
 
 func main() {
@@ -27,9 +28,9 @@ func sendMsgToTopic(msg string, topic *pubsub.Topic, ctx context.Context) {
 	result := topic.Publish(ctx, &pubsub.Message{
 		Data: []byte(msg),
 	})
-	id, r_err := result.Get(ctx)
-	if r_err != nil {
-		fmt.Println("publish err:\n", r_err)
+	id, rErr := result.Get(ctx)
+	if rErr != nil {
+		fmt.Println("publish err:\n", rErr)
 	}
 	fmt.Println("message id :", id)
 }

@@ -1,0 +1,49 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"strconv"
+
+	"github.com/dgrijalva/jwt-go"
+)
+
+type UserClaims struct {
+	*jwt.StandardClaims
+	Data string
+}
+
+type WixBody struct {
+	EventType  string `json:"eventType"`
+	InstanceId string `json:"instanceId"`
+	Data       string `json:"data"`
+}
+
+const WebhookPublicKey = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuKgnYIt85Pj3gmZlyToa\nKcu9AWhO3TqVNgLLWQ2gNJollH2tPXJMpQDYfAs+y3ryB2cCt3u/2BcM/E2Yjnzf\nm24VMX9qtOGi0wF0FM+vM+0UCKv3lWV9eXw/zyd1olk31Xu+sCQd+vF/cklx8oP6\nMHT3KoQ21937hDZnI5ZtNt44urQg7hc/cX/gStv7pbAEefkJHupiuD4vH4lPTZMY\nVgeOqghvP6eJCfNym/Qn5OlDo+/HXAgOrQPY30ZoDY0DlT/x34zaUzzlCEDD3MjN\nDfxKwADDp+4g1tL6Hwg40XHleDKOsDOOV8exDAUs3wFUP0NJwA8Hx/Uq2ufwVtRj\n0wIDAQAB\n-----END PUBLIC KEY-----"
+
+func main() {
+	jwtStr := "eyJraWQiOiJMR3FqeURvTiIsImFsZyI6IlJTMjU2In0.eyJkYXRhIjoie1wiZGF0YVwiOlwie1xcXCJvcmRlcklkXFxcIjpcXFwiOTFmMDgyM2QtZGI0ZC00OWJlLWI4ZGItYmRkOWYxMWNmYjNhXFxcIixcXFwibnVtYmVyXFxcIjpcXFwiMTAwMDVcXFwiLFxcXCJkYXRlQ3JlYXRlZFxcXCI6XFxcIjIwMjItMDEtMTBUMTA6MDY6MDguNjg2WlxcXCIsXFxcImJ1eWVySW5mb1xcXCI6e1xcXCJpZFxcXCI6XFxcIjhiMjgxZTE3LTk4MjktNDllYS04MTM3LWFhYTZlN2Y3MjZiZVxcXCIsXFxcInR5cGVcXFwiOlxcXCJNRU1CRVJcXFwiLFxcXCJpZGVudGl0eVR5cGVcXFwiOlxcXCJNRU1CRVJcXFwiLFxcXCJmaXJzdE5hbWVcXFwiOlxcXCJzbVxcXCIsXFxcImxhc3ROYW1lXFxcIjpcXFwidGVzdFxcXCIsXFxcInBob25lXFxcIjpcXFwiMTIzNDU2Nzg5XFxcIixcXFwiZW1haWxcXFwiOlxcXCJhcHBzQGFmdGVyc2hpcC5jb21cXFwiLFxcXCJjb250YWN0SWRcXFwiOlxcXCJiNDEyZjJlNS1hMTIxLTQ3OGUtOWYwYi0wODMwNGVlMDBiN2VcXFwifSxcXFwiY3VycmVuY3lcXFwiOlxcXCJVU0RcXFwiLFxcXCJ3ZWlnaHRVbml0XFxcIjpcXFwiTEJcXFwiLFxcXCJ0b3RhbHNcXFwiOntcXFwic3VidG90YWxcXFwiOlxcXCIyMi41XFxcIixcXFwic2hpcHBpbmdcXFwiOlxcXCIwLjBcXFwiLFxcXCJ0YXhcXFwiOlxcXCIwLjBcXFwiLFxcXCJkaXNjb3VudFxcXCI6XFxcIjAuMFxcXCIsXFxcInRvdGFsXFxcIjpcXFwiMjIuNVxcXCIsXFxcIndlaWdodFxcXCI6XFxcIjAuMFxcXCIsXFxcInF1YW50aXR5XFxcIjozfSxcXFwicmVhZFxcXCI6ZmFsc2UsXFxcImFyY2hpdmVkXFxcIjpmYWxzZSxcXFwicGF5bWVudFN0YXR1c1xcXCI6XFxcIk5PVF9QQUlEXFxcIixcXFwiZnVsZmlsbG1lbnRTdGF0dXNcXFwiOlxcXCJOT1RfRlVMRklMTEVEXFxcIixcXFwib3JkZXJzRXhwZXJpbWVudHNcXFwiOntcXFwiZXBDb21taXRUYXhcXFwiOnRydWUsXFxcIm1vdmVNZXJjaGFudEVtYWlsVG9FcFxcXCI6ZmFsc2UsXFxcIm1vdmVCdXllck9yZGVyQ29uZmlybWF0aW9uRW1haWxUb0VwXFxcIjpmYWxzZSxcXFwicHJvZHVjZWRCeUVwQnJpZGdlXFxcIjpmYWxzZX0sXFxcImNhcnRJZFxcXCI6XFxcIjY3ZmI2YTcxLWJiMGEtNGY2MC1iZjJmLTgzMjcxMDMxNGYzM1xcXCIsXFxcImJpbGxpbmdJbmZvXFxcIjp7XFxcInBheW1lbnRNZXRob2RcXFwiOlxcXCJvZmZsaW5lXFxcIixcXFwicGF5bWVudEdhdGV3YXlUcmFuc2FjdGlvbklkXFxcIjpcXFwiOTMzOGNkOGEtZTZmYS00NDk0LTg1MzktMDYxYjRkZWMzMWM2XFxcIixcXFwiYWRkcmVzc1xcXCI6e1xcXCJmdWxsTmFtZVxcXCI6e1xcXCJmaXJzdE5hbWVcXFwiOlxcXCJzbVxcXCIsXFxcImxhc3ROYW1lXFxcIjpcXFwidGVzdFxcXCJ9LFxcXCJjb3VudHJ5XFxcIjpcXFwiQ05cXFwiLFxcXCJzdWJkaXZpc2lvblxcXCI6XFxcIkNOLTExXFxcIixcXFwiY2l0eVxcXCI6XFxcIlN1bnJpc2VcXFwiLFxcXCJ6aXBDb2RlXFxcIjpcXFwiMTAwMDBcXFwiLFxcXCJwaG9uZVxcXCI6XFxcIjEyMzQ1Njc4OVxcXCIsXFxcImNvbXBhbnlcXFwiOlxcXCJkZGRkZGRkXFxcIixcXFwiZW1haWxcXFwiOlxcXCJhcHBzQGFmdGVyc2hpcC5jb21cXFwiLFxcXCJhZGRyZXNzTGluZTFcXFwiOlxcXCIyMDUxIE5vcnRoIFVuaXZlcnNpdHkgRHJpdmVcXFwifX19XCIsXCJpbnN0YW5jZUlkXCI6XCIxZmFiMGY0Zi1hMjIwLTRjYzMtYTU4OS0zODdmNzljMGQ1YTBcIixcImV2ZW50VHlwZVwiOlwiY29tLndpeC5lY29tbWVyY2Uub3JkZXJzLmFwaS52Mi5PcmRlckV2ZW50XCJ9IiwiaWF0IjoxNjQxODA5MTgzLCJleHAiOjE2NDU0MDkxODN9.JxFisMBpENMGO0mXMd0F5IhOPSyw8S_gEG8mlU4GREV_Yt1JZIA31yX4w3Z2oh2MQYxIladCPcLntiWqur8OtD1vYjZnzfQo0cfwXERo0aIwS44CJ-xEpoD31BkVbq0DIfvzdrc85ACdi3AQGWUnfhoZY-K4_tFOuETk6cihmNAr6NKlPeios_Og-FLrIE59-LKOa-G7LpSY1E671XlqWTlpej40cr71ce8QVbl9vmLmAFhiBgPyyO3yxlhfSiSviFq4hxKuX4i1QZuZmbmNGSLvv9XLn_9T7n8lmFYwEx7GOpa0E_6sh-3TX5Dm8iGNgaEv4ZOhcN5pk38mP5pi5w"
+	key, err := jwt.ParseRSAPublicKeyFromPEM([]byte(WebhookPublicKey))
+	if err != nil {
+		panic(err)
+	}
+	tokenClaims, err := jwt.ParseWithClaims(jwtStr, &UserClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return key, nil
+	})
+	if err != nil {
+		panic(err)
+	}
+	bodyData := new(WixBody)
+	if tokenClaims != nil {
+		if claims, ok := tokenClaims.Claims.(*UserClaims); ok && tokenClaims.Valid {
+			err = json.Unmarshal([]byte(claims.Data), &bodyData)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+	fmt.Printf("%v", bodyData)
+
+	raw := strconv.Quote(bodyData.Data)
+	fmt.Println(raw)
+}
